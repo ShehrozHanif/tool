@@ -1,3 +1,6 @@
+#Without Chainlit Agent as Tool
+# Compare this snippet from agent_as_tool_chainlit.py:
+
 import os
 import asyncio
 from dotenv import load_dotenv

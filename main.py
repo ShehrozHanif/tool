@@ -1,3 +1,6 @@
+# without chainlit app making function as tool , add weather api and student finder tool
+
+
 import asyncio
 import os
 from dotenv import load_dotenv

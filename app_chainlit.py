@@ -1,3 +1,6 @@
+# This is a Chainlit app that integrates with the Gemini API and OpenWeatherMap API.
+# It provides a weather tool and a student finder tool, allowing users to interact with the agent in a chat interface.
+# This process of making tool called function_tool  
 import os
 import requests
 import chainlit as cl
