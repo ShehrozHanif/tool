@@ -264,6 +264,183 @@ This code connects everything: smart brain, tools, user messages, and a polished
 
 
 
+
+
+
+**--------------------------------------------------------------------------------------------------------------------------**
+
+# Qestion:
+### we study in detail these tools which is used in openai sdk and my question is whether we use tool function and agent as tool in both cases we use gemini model and their api so get respond but whenever we ask the question outside the tool so it respond me it cant give answer . why when we already use gemini and their api and if we add this logic so still it called a tool calling or funcation calling agent then what this agent called
+
+### Summary:
+
+When using tools (function or agent-as-tool), your agent is designed to only use those tools. If a question doesn't match a tool, it will say “I can’t answer,” even if Gemini can normally answer such questions — because the agent is restricted to tool usage.
+
+### 🧠 1. Why the Agent says “I can’t answer that”
+Even though you're using Gemini (or any LLM), when you create an agent like this:
+
+                Agent(
+                    name="Tool Agent",
+                    instructions="Use tools only to answer user questions.",
+                    tools=[...],
+                    model=model  # Gemini in this case
+                )
+You're telling the agent:
+
+💬 “Don’t answer freely. You must solve everything by calling a tool.”
+
+So when a question is not handled by a tool, the agent says:
+
+❌ "Sorry, I can't answer that."
+
+#### ❗ Important:
+
+This isn’t a limitation of Gemini, it’s a restriction you've placed through the agent's logic. The agent delegates thinking to tools only — even if Gemini could normally answer on its own.
+
+
+### 🧰 2. Tool Functions vs Agent-as-Tool:
+Let’s compare both styles.
+
+
+## 🛠️ Tool Types in OpenAI SDK
+
+| **Type**               | **Purpose**                                 | **Example**                                 | **Can Chain Tools?** |
+|------------------------|----------------------------------------------|----------------------------------------------|-----------------------|
+| `@function_tool`       | Wraps a Python function as a callable tool   | `@function_tool`<br>`def get_weather(...):`   | ✅ Yes                |
+| `agent.as_tool(...)`   | Turns another agent into a tool              | `spanish_agent.as_tool(...)`                  | ✅ Yes                |
+
+---
+
+### 🔍 Explanation
+
+- **`@function_tool`**  
+  Use this decorator to convert any standalone Python function into a callable tool for your agent.  
+  ✅ Best for tasks like fetching data (e.g., weather, news) or performing calculations.
+
+- **`agent.as_tool(...)`**  
+  Use this method to wrap an existing agent and treat it like a tool for another agent.  
+  ✅ Great for building modular agents that delegate tasks.
+
+---
+
+### 🧠 Real-World Example
+
+Imagine you're building a **Travel Assistant Agent**:
+
+- You wrap a weather-checking function as a tool using `@function_tool`:
+  ```python
+  @function_tool
+  def get_weather(city: str) -> str:
+      return f"The weather in {city} is sunny."
+
+
+
+
+In both cases:
+
+ * The main agent is orchestrating the tool calls.
+
+ * But it's still not answering directly.
+
+ * It just routes the prompt to tools.
+
+
+
+
+
+### 🔄 3. What if I want fallback free answers?
+You might be thinking:
+
+ “Why can’t the agent use a tool if needed, but answer directly if not?”
+
+That’s hybrid behavior, and you can implement that yourself manually.
+
+Here's how 👇
+
+
+
+
+### ✅ Hybrid Agent: Tool + Free-Answer Fallback
+
+            from agents import Agent, Runner, AgentResult
+
+            @function_tool
+            async def get_weather(location: str) -> str:
+                return f"Weather in {location} is sunny."
+
+            # Agent with tools
+            tool_agent = Agent(
+                name="Hybrid Agent",
+                instructions="Use tools if needed, but you can also answer freely if tools don't apply.",
+                tools=[get_weather],
+                model=model  # Gemini
+            )
+
+            # Runner logic
+            async def hybrid_run(user_input: str):
+                result: AgentResult = await Runner.run(tool_agent, input=user_input)
+
+                if result.tool_calls:
+                    return result.final_output
+                elif result.final_output:
+                    return result.final_output
+                else:
+                    return "I couldn't answer."
+
+            # Example use
+            response = await hybrid_run("What is 2+2?")
+            print(response)
+
+
+This way:
+
+ * ✅ Gemini can answer simple logic (like "what is 2+2?")
+
+ * ✅ But still calls tools for things like get_weather(...)
+
+
+
+
+### 🔎 Final Part: What is this agent called?
+ So if we allow free-text + tool use, what is this agent?
+
+You can call it:
+
+✅ A Hybrid Agent
+
+✅ A Multi-capability Agent
+
+✅ A Generalist Agent with tools
+
+✅ Or simply: a Custom LLM Agent with fallback
+
+
+### 🛠️ Real-World Use Case Example (VS Code Project Idea)
+
+Imagine a Travel Assistant App:
+
+ * User: “Translate ‘I want coffee’ to French” → Tool translate_to_french
+
+ * User: “What’s the capital of Germany?” → Handled directly by Gemini
+
+ * User: “Check weather in Istanbul” → Tool get_weather
+
+Your agent knows when to use a tool, and when to answer directly. That’s powerful.
+
+
+
+
+
+
+
+**----------------------------------------------------------------------------------------------------------------------------**
+
+
+
+
+
+
+
 # OpenAi Agent SDK Overview (Tools)
 
 ## 🧠 Quick Summary (For Busy Readers)
